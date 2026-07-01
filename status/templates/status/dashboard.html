@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Live Web Scraper Dashboard</title>
+    <style>
+        body { font-family: sans-serif;
+             background: #1e1e2e;
+              color: #cdd6f4;
+               padding: 30px; }
+       
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        #stream-box {
+            background: #11111b;
+            border: 1px solid#45475a;
+            border-radius: 6px;
+            padding: 15x; 
+            height: 450px;
+            overflow-y: auto;
+            font-family: monospace; }
+            
+        .log-entry { padding: 10px;
+         border-bottom: 1px solid #313244;
+          line-height: 1.4; }
+
+        .author { color: #f9e2af;
+             font-weight: bold; }
+
+        .quote-text { color: #a6e3a1; }
+
+        .status { font-weight: bold;
+             margin-bottom: 20px; }
+
+             
+        }
+    </style>
+</head>
+
+
+<body>
+<div class="container">
+        <h2>Live Real-Time Scraping Feed</h2>
+        <div class="status">WebSocket Connection: <span id="ws-status" style="color: #f38ba8;">Disconnected</span></div>
+        
+        <div id="stream-box">
+            <div style="color: #6c7086;">[System] Awaiting WebSocket transmission feed... Trigger the scraper to view data.</div>
+        </div>
+    </div>
+
+
+    <<script>
+        // Connect to the Daphne ASGI server process line
+        const wsUrl = "ws://" + window.location.host + "/ws/terminal-stream/";
+        const socket = new WebSocket(wsUrl);
+        const streamBox = document.getElementById('stream-box');
+        const statusLabel = document.getElementById('ws-status');
+
+        socket.onopen = function() {
+            statusLabel.innerText = "Connected (Active)";
+            statusLabel.style.color = "#a6e3a1";
+        };
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            const log = document.createElement('div');
+            log.className = 'log-entry';
+            log.innerHTML = `⏰ ${new Date().toLocaleTimeString()} - <span class="author">[${data.title}]</span> <span class="quote-text">${data.value}</span>`;
+            
+            streamBox.appendChild(log);
+            streamBox.scrollTop = streamBox.scrollHeight; // Keep view scrolled down
+        };
+
+        socket.onclose = function() {
+            statusLabel.innerText = "Disconnected";
+            statusLabel.style.color = "#f38ba8";
+        };
+    </script>
+</body>
+
+</html>

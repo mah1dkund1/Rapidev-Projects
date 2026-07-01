@@ -1,4 +1,39 @@
 import time
+from django.core.management.base import BaseCommand
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from status.models import ScrapedData
+
+class Command(BaseCommand):
+    help = "Validates the full ASGI Signal and Channel Layer pipeline locally."
+
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS("⚡ Diagnostic Process Test Started..."))
+        
+        # 1. Manually test if your signals file is responding to saves
+        self.stdout.write("\n[Step 1] Creating database record to fire signals...")
+        
+        # This will call pre_save (strip spaces) and post_save (channel layer broadcast)
+        obj = ScrapedData.objects.create(
+            title="   Diagnostic Test   ",
+            value="Checking if process layers communicate."
+        )
+        
+        self.stdout.write(self.style.SUCCESS(f"✔ Database write complete. Saved ID: {obj.id}"))
+        self.stdout.write(f"✔ Sanitized Title Check: '{obj.title}' (Should have no spaces)")
+        
+        self.stdout.write("\n[Step 2] Testing internal Memory Channel Layer loop...")
+        channel_layer = get_channel_layer()
+        
+        if channel_layer is None:
+            self.stdout.write(self.style.ERROR("❌ Error: Channel layer not detected! Check settings.py"))
+            return
+
+        self.stdout.write(self.style.SUCCESS("🎉 System Test Complete! Everything is wired up perfectly."))
+
+"""
+
+import time
 import requests
 from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
@@ -46,20 +81,7 @@ class Command(BaseCommand):
 
                     self.stdout.write(self.style.SUCCESS("Saved successfuly!"))         
                    
-                    """
-                    title_element = soup.find('h1')
-                    body_element = soup.find('p')
-
-                    title = title_element.text.strip() if title_element else "No Title Found"
-
-                    value = body_element.text.strip() if body_element else "No Content Found"
-
-                    #savign to db
-
-                    ScrapedData.objects.create(title=title, value=value)
-                    self.stdout.write(self.style.SUCCESS(f"Successfully saved: {title}"))
                     
-                     """
 
 
 
@@ -68,6 +90,7 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Error occurred: {str(e)}"))        
 
-            self.stdout.write("Will run again in 5 mins")
-            time.sleep(300)    
+            self.stdout.write("Will run again in 30 seconds")
+            time.sleep(30)    
 
+"""

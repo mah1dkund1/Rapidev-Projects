@@ -1,16 +1,19 @@
-"""
-ASGI config for config project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
-"""
-
 import os
-
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.urls import path
+from status.consumers import TerminalConsumer
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE' , 'config.settings')
 
-application = get_asgi_application()
+application = ProtocolTypeRouter({
+
+# this handles https reqs normally
+"http": get_asgi_application(),
+
+# this handles permanent websocket connections
+"websocket": URLRouter([
+    path("ws/terminal-stream/", TerminalConsumer.as_asgi()),
+]),
+
+})
